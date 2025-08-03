@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: ../kompose -f docker-compose convert
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: smokeping
+  name: smokeping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: smokeping
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: ../kompose -f docker-compose convert
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: smokeping
+    spec:
+      containers:
+        - env:
+            - name: CACHE_DIR
+              value: /tmp
+            - name: PGID
+              value: "1000"
+            - name: PUID
+              value: "1000"
+            - name: SHARED_SECRET
+              value: password
+            - name: TZ
+              value: Etc/UTC
+          image: lscr.io/linuxserver/smokeping:latest
+          name: smokeping
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /config
+              name: smokeping-config
+            - mountPath: /data
+              name: smokeping-data
+      hostname: smokeping
+      restartPolicy: Always
+      volumes:
+        - name: smokeping-config
+          persistentVolumeClaim:
+            claimName: smokeping-config
+        - name: smokeping-data
+          persistentVolumeClaim:
+            claimName: smokeping-data
